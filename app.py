@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, Response, redirect
+from flask import Flask, render_template, request, Response, redirect, make_response, session
 from flask_mysqldb import MySQL
 import MySQLdb
 import yaml
 import time
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 import io
@@ -11,6 +12,7 @@ import io
 
 app = Flask(__name__)
 
+app.secret_key='Keep this secret, keep this hidden'
 
 #Configure db
 db = yaml.load(open('db.yaml'))
@@ -47,9 +49,11 @@ def get_data():
 
 	return data()
 
-def plot_data():
+def plot_data(numSamples):
 	cur = mysql.connection.cursor()
-	cur.execute(f"SELECT * FROM temperatures ORDER BY date ASC;")
+	val = str(numSamples)
+	#print('numSamples:',type(numSamples), numSamples)
+	cur.execute("SELECT * FROM temperatures ORDER BY ID DESC LIMIT "+val)
 	data = cur.fetchall()
 	#mysql.connection.commit()
 	a = []
@@ -59,14 +63,21 @@ def plot_data():
 		a.append(str(row[3]))
 		b.append(float(row[1]))
 		c.append(float(row[2]))
-	plt.plot(a,b,'-b',label='tc1')
-	plt.plot(a,c,'--r',label='tc2')
-	plt.legend(loc='upper right',frameon=True)
-	# matplotlib.axes._axesAxes.invert_yaxis()
-	plt.xlabel('time stamp', fontsize = 18)
-	plt.ylabel('temperature', fontsize = 18)
-	plt.xticks(rotation=90)
-	plt.show()
+	a.reverse()
+	b.reverse()
+	c.reverse()
+	return a,b,c
+	# fig = plt.figure()
+	# ax = fig.add_subplot(1,1,1)
+	# ax.clear()
+	# ax.plot(a,b,'-b',label='tc1')
+	# ax.plot(a,c,'--r',label='tc2')
+	# ax.legend(loc='upper right',frameon=True)
+	# # matplotlib.axes._axesAxes.invert_yaxis()
+	# # ax.xlabel('time stamp', fontsize = 18)
+	# # ax.ylabel('temperature', fontsize = 18)
+	# ax.xticks(rotation=90)
+	# plt.show()
 
 
 # def create_figure(x,y):
@@ -78,29 +89,52 @@ def plot_data():
 
 @app.route('/', methods=['GET','POST'])
 def index():
-	if request.method == 'GET':
-		t = get_data()
-		return render_template('index.html', temp = t.temp1, temp1 = t.temp2)
-	if request.method == 'POST':
-		cur = mysql.connection.cursor()
-		cur.execute(f"TRUNCATE TABLE temperatures;")
-		cur.close
-		return render_template('index.html', temp = "none", temp1 = "none")
+	t = get_data()
+	if request.method == "POST":
+		session['numSamples'] = request.form['numSamples']
+	return render_template('index.html', temp = t.temp1, temp1 = t.temp2)
+	
 
-@app.route('/plot')
+@app.route('/plot', methods=['GET','POST'])
 def plot():
-	plot_data()
-	return redirect('/')
+	#numSamples = request.form['numSamples']
+	# if numSamples >=1:
+	# 	numSamples = numSamples
+	# 	print(numSamples)
+	# else:
+	numSamples = session.get('numSamples')
+	print(numSamples)
+	if numSamples == '':
+		numSamples = 5
+		print(numSamples)
+	else:
+		numSamples = session.get('numSamples')
+	print("creating new plot with get")
+	time, temp1, temp2 = plot_data(numSamples)
+	fig = Figure()
+	axis = fig.add_subplot(1,1,1)
+	axis.set_title('Temperature (degC)')
+	xs = range(int(numSamples))
+	plt.xticks(rotation=90)
+	axis.plot(time, temp1)
+	canvas = FigureCanvas(fig)
+	output = io.BytesIO()
+	canvas.print_png(output)
+	response = make_response(output.getvalue())
+	response.mimetype = 'image.png'
+	return response
+	# return redirect('/')
+	# return Response(output.getvalue(), mimetype='image.png')
+	
 
 
 
-# @app.route('/plot.png')
-# def plot_png():
-# 	x,y = get_data()
-# 	fig = create_figure()
-# 	output = io.BtesIO()
-# 	FigureCanvas(fig).print_png(output)
-# 	return Response(output.getvalue(), mimetype='image/png')
+
+# @app.route('/plot/temp')
+# def plot_temp():
+	
+# 	return response
+
 		
 
 
