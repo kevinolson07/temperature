@@ -1,21 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type='text/css' href='/static/style.css'>
     <title>
         Heater Temperature
     </title>
 </head>
 <body>
-    <h1>Current temperatures</h1>
-    <p>TC1:{{temp}}</p>
-    <p>TC2:{{temp1}}</p>
     <h3>Historical Data</h3>
-    <p>enter number of smaples to display:
-        <form action = "/" method = 'POST'>
-            <input type='text' name='numSamples'>
-            <input type='submit' value='Submit'>
-        </form>
-    </p>
-    <img src="/plot" alt="my plot">
+    <div>
+        <img class='graph' src="/plot" alt="my plot" >
+        <div class='form-group row form'>
+            <form action = "/" method = 'POST'>
+                <label class='label'>Number of Samples:</label>
+                <input  placeholder='Number of Samples' type='text' name='numSamples'>
+                <input class='btn btn-primary' type='submit' value='Submit'>
+            </form>
+        </div>
+    </div>
+    <hr></hr>
+    <p>Thremocouple 1: {{temp}}</p>
+    <p>Thermocouple 2: {{temp1}}</p>
+    
+    
+   
+
+    
 </body>
 </html>

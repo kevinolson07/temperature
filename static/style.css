@@ -1,0 +1,23 @@
+
+
+img.graph {
+    width: 70%;
+    height: 35%;
+}
+
+div.label {
+    display: inline-block;
+}
+
+div.form {
+    display: inline-block;
+    padding-left: 30px;
+    
+}
+div.label {
+    padding-left: 30px;
+}
+
+form{
+    padding-left: 10px;
+}
